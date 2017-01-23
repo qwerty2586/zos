@@ -104,7 +104,7 @@ Zápočet musíte získat do mezního data pro získání zápočtu (10. února 
 
 A samozřejmě musíte mít zápočet dříve, než půjdete na zkoušku (alespoň 1 den předem).
  
-
+ 
 ## Hodnocení
 Při kontrole semestrální práce bude hodnocena:
 * Kvalita a čitelnost kódu včetně komentářů
