@@ -103,7 +103,7 @@ Do kdy musím semestrální práci odevzdat?
 Zápočet musíte získat do mezního data pro získání zápočtu (10. února 2017).
 
 A samozřejmě musíte mít zápočet dříve, než půjdete na zkoušku (alespoň 1 den předem).
-
+ 
 
 ## Hodnocení
 Při kontrole semestrální práce bude hodnocena:
