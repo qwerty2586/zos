@@ -65,7 +65,9 @@ int FileSystemDefragmenter::defragment(int threads_count) {
         }
 
         fat_mutex.lock();
+        rw_mutex.lock();
         flush_fat();
+        rw_mutex.unlock();
         fat_mutex.unlock();
     }
 
@@ -123,7 +125,7 @@ void FileSystemDefragmenter::worker_loop() {
         fat_mutex.unlock();
         rw_mutex.lock();
         std::vector<directory> *dir = get_dir(back_table[first_cluster]);
-        for (auto item : *dir) {
+        for (auto &item : *dir) {
             if (item.start_cluster == old_first_cluster) {
                 item.start_cluster = first_cluster;
                 break;
@@ -188,6 +190,7 @@ void FileSystemDefragmenter::populate_jobs_and_back_table(int32_t cluster, int32
 
 }
 
+/// zabere chunk tak aby si ho pro presun nemohlo zabrat jine vlakno
 int32_t FileSystemDefragmenter::reserve_chunk(int32_t size) {
     int32_t r = last_reserver; // default 0 meli bychm resetovat mezi fazemi
     fat_mutex.lock();
