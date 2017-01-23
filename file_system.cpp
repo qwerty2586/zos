@@ -1,5 +1,4 @@
 
-#include <vector>
 #include <cstdio>
 #include <sstream>
 #include "file_system.h"
@@ -35,6 +34,8 @@ int FileSystem::mount(const std::string &fat_file) {
     clusters_offset = sizeof(boot_record) + sizeof(int32_t) * br->usable_cluster_count * br->fat_copies;
     max_files_in_dir = br->cluster_size / sizeof(directory);
     buffer_cluster = new char[br->cluster_size];
+    zero_cluster = new char[br->cluster_size];
+    memset(zero_cluster, '\0', (size_t) br->cluster_size); // znulujem
     mounted = true;
     return EXIT_OK;
 }
@@ -49,6 +50,7 @@ int FileSystem::umount() {
     delete br;
     free(fat);
     delete buffer_cluster;
+    delete zero_cluster;
     return EXIT_OK;
 }
 
@@ -122,15 +124,30 @@ int32_t FileSystem::first_unused(int start = 0) {
 int32_t FileSystem::cd(const std::string &filename) {
     int32_t current_dir_cluster = 0;
     int depth = 0;
-    std::vector<std::string> path = split(filename, '/');
+    std::string new_path = filename;
+
+    // aby jsme mohli psat cesty zacinajici lomitkem
+    // ktere ale budeme ignorovat, jen potrebujeme
+    // aby byli akceptovany jako argument
+    if (new_path.front() == '/') {
+        new_path = new_path.substr(1);
+    };
+    std::vector<std::string> path = split(new_path, '/');
+    if (path.size()<2)
+        return 0; //root
+
+
+    // nyni zkusime traverzovat zkrz cestu
+    // to co je za poslednim lomitkem je ignorovano
     deeper:
-    while (depth + 2 < path.size()) {
+    while (depth + 1 < path.size()) {
         std::vector<directory> *dir = get_dir(current_dir_cluster);
         for (directory x : *dir) {
             if (!x.isFile) {
                 if (path[depth].compare(x.name) == 0) {
                     current_dir_cluster = x.start_cluster;
                     depth++;
+                    delete dir;
                     goto deeper;
                 }
             }
@@ -154,15 +171,12 @@ std::vector<directory> *FileSystem::get_dir(int32_t cluster) {
 
 void FileSystem::write_dir(int32_t addr, std::vector<directory> *dir) {
 
-    directory x;
     fseek(fs, cluster_to_addr(addr), SEEK_SET);
     for (int i = 0; i < dir->size(); ++i) {
         fwrite(&((*dir)[i]), sizeof(directory), 1, fs);
     }
-    if (dir->size() < max_files_in_dir) {
-        char n = '\0';
-        fwrite(&n, 1, 1, fs);
-    }
+    // doplnime nulama
+    fwrite(zero_cluster, br->cluster_size - (dir->size()) * sizeof(directory), 1, fs);
 
 
 }
@@ -173,11 +187,14 @@ int FileSystem::put_file(const std::string &file, const std::string &path) {
     if (dir->size() >= max_files_in_dir) return EXIT_DIR_FULL;
     auto first = first_unused(dir_cluster + 1);
     FILE *input_file = fopen(file.c_str(), "rb");
+
+    // zjistime velikost
     fseek(input_file, 0, SEEK_END);
     int32_t size = (int32_t) ftell(input_file);
     fseek(input_file, 0, SEEK_SET);
     int32_t cluster_count = size / br->cluster_size;
     cluster_count++;
+    // pocet zapsanych clusteru
     int32_t writen = 0;
     auto old = first;
     while (1) {
@@ -200,7 +217,8 @@ int FileSystem::put_file(const std::string &file, const std::string &path) {
     directory *dir_item = new directory;
     dir_item->isFile = true;
     dir_item->start_cluster = first;
-    strcpy(dir_item->name, split(path, '/').back().c_str());
+    memset(dir_item->name,'\0',sizeof(directory::name));
+    split(path, '/').back().copy(dir_item->name,sizeof(directory::name)-1);
     dir_item->size = size;
 
     dir->push_back(*dir_item);
@@ -270,11 +288,11 @@ std::string FileSystem::list_of_clusters_of_file(const std::string &path) {
 void FileSystem::print_file(const std::string &path) {
     auto dir_cluster = cd(path);
     auto dir = get_dir(dir_cluster);
-    std::string &filename = split(path, '/').back();
+    std::string filename = split(path, '/').back().c_str(); // clion bez c_str hlasi chybu i kdyz tam neni pri kompilaci
     for (int i = 0; i < dir->size(); ++i) {
         if (filename.compare((*dir)[i].name) == 0) {
             int32_t next = (*dir)[i].start_cluster;
-            std::cout << filename << ":";
+            std::cout << filename <<  ": ";
             while (fat[next] != FAT_FILE_END) {
                 int32_t tmp = fat[next];
                 fseek(fs, cluster_to_addr(next), SEEK_SET);
@@ -284,7 +302,9 @@ void FileSystem::print_file(const std::string &path) {
             }
             fseek(fs, cluster_to_addr(next), SEEK_SET);
             fread(buffer_cluster, br->cluster_size, 1, fs);
-            std::cout << buffer_cluster << std::endl;
+
+            std::cout.write(buffer_cluster, (size_t) (*dir)[i].size % br->cluster_size); // limitujem jenom na konec souboru
+            std::cout << std::endl; // diskutabilni zda mame jeste davat na konec mezeru
 
             return;
         }
@@ -308,7 +328,8 @@ int FileSystem::mk_dir(const std::string &dir_name, const std::string &path) {
     directory *dir_item = new directory;
     dir_item->isFile = false;
     dir_item->start_cluster = new_cluster;
-    strcpy(dir_item->name, dir_name.c_str());
+    memset(dir_item->name,'\0',sizeof(directory::name));
+    dir_name.copy(dir_item->name,sizeof(directory::name)-1);
     dir_item->size = 0;
     dir->push_back(*dir_item);
     delete dir_item;
@@ -334,7 +355,7 @@ void FileSystem::print_dir(const std::string &dir_name, int32_t cluster, int32_t
     }
 
     auto dir = get_dir(cluster);
-    if (depth>0) {
+    if (depth > 0) {
         std::cout << tabs << "+" << dir_name << " " << cluster << std::endl;
     } else {
         std::cout << tabs << "+" << dir_name << std::endl; // protoze root nema mit cislo clusteru
@@ -342,14 +363,54 @@ void FileSystem::print_dir(const std::string &dir_name, int32_t cluster, int32_t
     for (int i = 0; i < dir->size(); ++i) {
         if ((*dir)[i].isFile) {
             std::cout << tabs << "\t" << "-" << (*dir)[i].name
-                      << " " << (*dir)[i].start_cluster << " " << ((*dir)[i].size / br->cluster_size + 1 ) << std::endl;
+                      << " " << (*dir)[i].start_cluster << " " << ((*dir)[i].size / br->cluster_size + 1) << std::endl;
         } else {
-            print_dir((*dir)[i].name,(*dir)[i].start_cluster,depth+1);
+            print_dir((*dir)[i].name, (*dir)[i].start_cluster, depth + 1);
         }
     }
     std::cout << tabs << "--" << std::endl;
 
-};
+}
+
+int FileSystem::rm_dir(const std::string &path) {
+    int32_t dir_cluster = cd(path);
+    if (dir_cluster < 0) {
+        return EXIT_PATH_NOT_FOUND;
+    }
+
+    auto dir = get_dir(dir_cluster);
+    if (dir->size() != 0) {
+        return EXIT_PATH_NOT_EMPTY;
+    }
+
+    std::string parent_path = path;
+    parent_path.pop_back(); // umazeme posledni '/'
+    std::string dir_name = (split(parent_path, '/').back()); // vemem nazev adresare
+
+    auto parent_cluster = cd(parent_path);
+    if (parent_cluster < 0) {
+        return EXIT_PATH_NOT_FOUND;
+    }
+    auto parent_dir = get_dir(parent_cluster);
+
+    for (int i = 0; i < parent_dir->size(); ++i) {
+        if (dir_name.compare((*parent_dir)[i].name) == 0) {
+            parent_dir->erase(parent_dir->begin() + i);
+            write_dir(parent_cluster, parent_dir);
+
+            // znulujem cluster s adresarem
+            fseek(fs, cluster_to_addr(dir_cluster), SEEK_SET);
+            fwrite(zero_cluster, br->cluster_size, 1, fs);
+
+            fat[dir_cluster] = FAT_UNUSED;
+            flush_fat();
+            return EXIT_OK;
+        }
+    }
+    return EXIT_PATH_NOT_FOUND;
+
+}
+
 
 
 
