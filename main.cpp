@@ -20,6 +20,8 @@ void print_help() {
     std::cout << "        Prints help                                        " << std::endl ;
     std::cout << " -a file full_path                                         " << std::endl ;
     std::cout << "        Write file to path                                 " << std::endl ;
+    std::cout << " -f full_path                                              " << std::endl ;
+    std::cout << "        Delete file                                        " << std::endl ;
     std::cout << " -c full_path                                              " << std::endl ;
     std::cout << "        List file clusters                                 " << std::endl ;
     std::cout << " -p                                                        " << std::endl ;
