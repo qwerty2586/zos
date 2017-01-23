@@ -32,6 +32,10 @@ int FileSystemDefragmenter::defragment(int threads_count) {
         }));
     }
 
+    // pockame nez workeri najedou
+    usleep(10000);
+
+    auto start_time = std::chrono::high_resolution_clock::now();
     std::cout << "defragmenting using " << threads_count << " threads" << std::endl;
     long last_score = INT64_MAX;
 
@@ -40,13 +44,18 @@ int FileSystemDefragmenter::defragment(int threads_count) {
         analyze_and_sort_jobs();
         print_stats();
         if (total_score >= last_score || prepared.get_vector().size() == 0) {
+            auto end_time = std::chrono::high_resolution_clock::now();
             std::cout << "defragmenting using " << threads_count << " threads finished" << std::endl;
+            std::cout << "time of operation " <<
+                      std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count()
+                      << " ms"<< std::endl;
             break;
         }
         last_score = total_score;
 
 
         phase++;
+
 
         paused_threads = 0;
         workers_cv.notify_all(); // start_threads
@@ -67,7 +76,6 @@ int FileSystemDefragmenter::defragment(int threads_count) {
     for (int i = 0; i < threads_count; ++i) {
         workers[i].join();
     }
-    
 
 
     return 0;
@@ -127,7 +135,7 @@ void FileSystemDefragmenter::worker_loop() {
         for (int i = 0; i < size; ++i) {
             job->clusters[i] = first_cluster + i;
         }
-        dereserve_chunk(first_cluster,size);
+        dereserve_chunk(first_cluster, size);
 
         to_next_round.push(job);
 
@@ -143,7 +151,7 @@ void FileSystemDefragmenter::populate_jobs_and_back_table(int32_t cluster, int32
     switch (fat[cluster]) {
         case FAT_UNUSED:
         case FAT_BAD_CLUSTER: {
-            std::cout << "error processing cluster " << cluster << " skipping item";
+            std::cout << "error processing cluster " << cluster << " skipping item" << std::endl;
             return;
         }
         case FAT_DIRECTORY: {

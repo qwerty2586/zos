@@ -13,13 +13,39 @@ FileSystem *fs;
 #define ARG_OTHER_1 2
 #define ARG_OTHER_2 3
 
-
+void print_help() {
+    std::cout << " zos  - pseudofat manager                                  " << std::endl ;
+    std::cout << "        Usage : zos FAT_FILE OTHER_ARGS                    " << std::endl ;
+    std::cout << " -h                                                        " << std::endl ;
+    std::cout << "        Prints help                                        " << std::endl ;
+    std::cout << " -a file full_path                                         " << std::endl ;
+    std::cout << "        Write file to path                                 " << std::endl ;
+    std::cout << " -c full_path                                              " << std::endl ;
+    std::cout << "        List file clusters                                 " << std::endl ;
+    std::cout << " -p                                                        " << std::endl ;
+    std::cout << "        Generate tree of filesystem                        " << std::endl ;
+    std::cout << " -l full_path                                              " << std::endl ;
+    std::cout << "        Print file to screen                               " << std::endl ;
+    std::cout << " -m dir_name full_path                                     " << std::endl ;
+    std::cout << "        Creates directory in path                          " << std::endl ;
+    std::cout << " -r full_path                                              " << std::endl ;
+    std::cout << "        Remove empty directory                             " << std::endl ;
+    std::cout << " -x cluster_count cluster_size                             " << std::endl ;
+    std::cout << "        Create empty filesystem                            " << std::endl ;
+    std::cout << " -d worker_threads_count                                   " << std::endl ;
+    std::cout << "        Defragment filesystem                              " << std::endl ;
+    std::cout << "                                                           " << std::endl ;
+    std::cout << " Paths can start with / but if you specify root then"
+              << " it is mandatory directory path always end with / rest"
+              << " after that is omited.                                     " << std::endl ;
+};
 
 
 int main(int argc, char *argv[]) {
 
     if (argc<3) {
         cout << "Wrong number of arguments" << endl;
+        print_help();
         return EXIT_FAILURE;
     }
 
@@ -88,40 +114,15 @@ int main(int argc, char *argv[]) {
     }
 
     if (args[ARG_OP] == "-h") {
-        std::cout << " zos  - pseudofat manager                                  " << std::endl ;
-        std::cout << "        Usage : zos FAT_FILE OTHER_ARGS                    " << std::endl ;
-        std::cout << " -h                                                        " << std::endl ;
-        std::cout << "        Prints help                                        " << std::endl ;
-        std::cout << " -a file full_path                                         " << std::endl ;
-        std::cout << "        Write file to path                                 " << std::endl ;
-        std::cout << " -c full_path                                              " << std::endl ;
-        std::cout << "        List file clusters                                 " << std::endl ;
-        std::cout << " -p                                                        " << std::endl ;
-        std::cout << "        Generate tree of filesystem                        " << std::endl ;
-        std::cout << " -l full_path                                              " << std::endl ;
-        std::cout << "        Print file to screen                               " << std::endl ;
-        std::cout << " -m dir_name full_path                                     " << std::endl ;
-        std::cout << "        Creates directory in path                          " << std::endl ;
-        std::cout << " -r full_path                                              " << std::endl ;
-        std::cout << "        Remove empty directory                             " << std::endl ;
-        std::cout << " -x cluster_count cluster_size                             " << std::endl ;
-        std::cout << "        Create empty filesystem                            " << std::endl ;
-        std::cout << " -d worker_threads_count                                   " << std::endl ;
-        std::cout << "        Defragment filesystem                              " << std::endl ;
-        std::cout << "                                                           " << std::endl ;
-        std::cout << " Paths can start with / but if you specify root then       " << std::endl ;
-        std::cout << " it is mandatory directory path always end with / rest     " << std::endl ;
-        std::cout << " after that is omited.                                     " << std::endl ;
-
+        print_help();
     }
-
-
-
 
     //vytvareci na testy
     if (args[ARG_OP].compare("-x") == 0) {
         fs->create(args[ARG_FAT_FILE], stoi(args[ARG_OTHER_1]), (int16_t) stoi(args[ARG_OTHER_2]), 2, "my fatsystem", "qwerty");
     }
+
+    delete fs;
 
     return EXIT_SUCCESS;
 }
