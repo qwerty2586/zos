@@ -2,21 +2,22 @@
 Tématem semestrální práce bude práce s tabulkou pseudoFAT. Vaším cílem bude splnit několik
 vybraných úloh.
 Základní funkčnost, kterou musí program splňovat. Formát výpisů je závazný.
-1. Nahraje soubor z adresáře do cesty virtuální FAT tabulky
+
+* Nahraje soubor z adresáře do cesty virtuální FAT tabulky
 ```
 ./program vaseFAT.dat -a s1 ADR
 Možný výsledek:
 OK
 PATH NOT FOUND
 ```
-2. Smaže soubor s1 z vaseFAT.dat (s1 je plná cesta ve virtuální FAT)
+* Smaže soubor s1 z vaseFAT.dat (s1 je plná cesta ve virtuální FAT)
 ```
 ./program vaseFAT.dat -f s1
 Možný výsledek:
 OK
 PATH NOT FOUND
 ```
-3. Vypíše čísla clusterů, oddělené dvojtečkou, obsahující data souboru s1 (s1 je plná cesta ve
+* Vypíše čísla clusterů, oddělené dvojtečkou, obsahující data souboru s1 (s1 je plná cesta ve
 virtuální FAT)
 ```
 ./program vaseFAT.dat -c s1
@@ -24,14 +25,14 @@ Možný výsledek:
 S1 2,3,4,9,15
 PATH NOT FOUND
 ```
-4. Vytvoří nový adresář ADR v cestě ADR2
+* Vytvoří nový adresář ADR v cestě ADR2
 ```
 ./program vaseFAT.dat -m ADR ADR2
 Možný výsledek:
 OK
 PATH NOT FOUND
 ```
-5. Smaže prázdný adresář ADR (ADR je plná cesta ve virtuální FAT)
+* Smaže prázdný adresář ADR (ADR je plná cesta ve virtuální FAT)
 ```
 ./program vaseFAT.dat -r ADR
 Možný výsledek:
@@ -39,14 +40,14 @@ OK
 PATH NOT FOUND
 PATH NOT EMPTY
 ```
-6. Vypíše obsah souboru s1 na obrazovku (s1 je plná cesta ve virtuální FAT)
+* Vypíše obsah souboru s1 na obrazovku (s1 je plná cesta ve virtuální FAT)
 ```
 ./program vaseFAT.dat -l s1
 Možný výsledek:
 PATH NOT FOUND
 S1: toto je obsah souboru.
 ```
-7. Vypíše obsah adresáře ve formátu +adresář, +podadresář cluster, ukončeno --, - soubor
+* Vypíše obsah adresáře ve formátu +adresář, +podadresář cluster, ukončeno --, - soubor
 první_cluster počet_clusterů. Jeden záznam jeden řádek. Podadresáře odsazeny o /t:
 ```
 ./program vaseFAT.dat -p
@@ -102,6 +103,8 @@ Do kdy musím semestrální práci odevzdat?
 Zápočet musíte získat do mezního data pro získání zápočtu (10. února 2017).
 
 A samozřejmě musíte mít zápočet dříve, než půjdete na zkoušku (alespoň 1 den předem).
+
+
 ## Hodnocení
 Při kontrole semestrální práce bude hodnocena:
 * Kvalita a čitelnost kódu včetně komentářů
