@@ -109,10 +109,10 @@ int main(int argc, char *argv[]) {
     if (args[ARG_OP] == "-d") {
         FileSystemDefragmenter *fs =  new FileSystemDefragmenter();
         fs->mount(args[ARG_FAT_FILE]);
-        fs->print_blocks();
+        //fs->print_blocks();
         int n = stoi(args[ARG_OTHER_1]);
         fs->defragment(n);
-        fs->print_blocks();
+        //fs->print_blocks();
         fs->umount();
         delete fs;
     }

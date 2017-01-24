@@ -306,7 +306,7 @@ void FileSystemDefragmenter::move_cluster(char *buffer_cluster, int32_t from, in
 void FileSystemDefragmenter::print_blocks() {
 
     for (int i = 0; i < br->usable_cluster_count; ++i) {
-
+        if (i%100 == 0) std::cout << std::endl;
         switch (fat[i]) {
             case    FAT_UNUSED      : std::cout << "-";
                 break;
@@ -317,7 +317,7 @@ void FileSystemDefragmenter::print_blocks() {
             default:
                      std::cout << "0";
             }
-        if (i%100 == 0) std::cout << std::endl;
+
     }
     std::cout << std::endl;
 
