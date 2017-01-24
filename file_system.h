@@ -23,7 +23,8 @@ public:
     ~FileSystem();
 
     virtual int mount(const std::string &fat_file);
-    int umount();
+
+    virtual int umount();
 
     void sync();
 

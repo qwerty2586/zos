@@ -9,16 +9,22 @@
 class FileSystemDefragmenter : public FileSystem {
 public:
     int mount(const std::string &fat_file) override;
+
+    int umount() override;
+
     int defragment(int threads_count);
 
 protected:
+
+    FILE *fw,*fr; // pouze na kopirovani clusteru
+
     JobList prepared,to_next_round,finished;
     int32_t *back_table;
     int32_t last_reserver = 0;
 
     std::mutex workers_mutex,main_thread_mutex;
     std::condition_variable workers_cv,main_thread_cv;
-    std::mutex reservation_mutex, fat_mutex, rw_mutex;
+    std::mutex reservation_mutex, fat_mutex, fs_mutex, fw_mutex, fr_mutex;
 
     bool all_jobs_finished = false;
     std::vector<std::thread> workers;
@@ -42,7 +48,7 @@ protected:
 
     void print_stats();
 
-    void move_cluster(int32_t from, int32_t to);
+    void move_cluster(char *buffer_cluster, int32_t from, int32_t to);
 };
 
 

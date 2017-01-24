@@ -7,11 +7,23 @@ int FileSystemDefragmenter::mount(const std::string &fat_file) {
     int r = FileSystem::mount(fat_file);
     if (r != EXIT_OK) return r;
 
+    // otevreme dalsi dva filedecriptory na zapis a cteni
+    fw = fopen(fat_file.c_str(), "rb+");
+    fr = fopen(fat_file.c_str(), "rb+");
+
     create_back_table();
     populate_jobs_and_back_table(0, -1);
     return EXIT_OK;
 
 }
+
+int FileSystemDefragmenter::umount() {
+    fclose(fw);
+    fclose(fr);
+    return FileSystem::umount();
+};
+
+
 
 void FileSystemDefragmenter::create_back_table() {
     back_table = new int32_t[br->usable_cluster_count];
@@ -65,9 +77,9 @@ int FileSystemDefragmenter::defragment(int threads_count) {
         }
 
         fat_mutex.lock();
-        rw_mutex.lock();
+        fs_mutex.lock();
         flush_fat();
-        rw_mutex.unlock();
+        fs_mutex.unlock();
         fat_mutex.unlock();
     }
 
@@ -87,6 +99,10 @@ int FileSystemDefragmenter::defragment(int threads_count) {
 void FileSystemDefragmenter::worker_loop() {
     std::unique_lock<std::mutex> lock(workers_mutex);
     workers_cv.wait(lock); // ceka na prvni odstartovani
+
+    // pouziva vlastni buffer
+    char *worker_buffer_cluster = new char[br->cluster_size];
+
 
     while (1) {
 
@@ -111,7 +127,7 @@ void FileSystemDefragmenter::worker_loop() {
 
         //presuneme soubor
         for (int i = 0; i < size; ++i) {
-            move_cluster(job->clusters[i], first_cluster + i);
+            move_cluster(worker_buffer_cluster, job->clusters[i], first_cluster + i);
         }
         job->score = 0; // pozadame o pouze castecnou analyzu - soubor je defragmentovan
         fat_mutex.lock();
@@ -123,7 +139,7 @@ void FileSystemDefragmenter::worker_loop() {
         fat[first_cluster + size - 1] = FAT_FILE_END;
         back_table[first_cluster] = back_table[job->clusters[0]];
         fat_mutex.unlock();
-        rw_mutex.lock();
+        fs_mutex.lock();
         std::vector<directory> *dir = get_dir(back_table[first_cluster]);
         for (auto &item : *dir) {
             if (item.start_cluster == old_first_cluster) {
@@ -133,7 +149,7 @@ void FileSystemDefragmenter::worker_loop() {
         }
         write_dir(back_table[first_cluster], dir);
         delete dir;
-        rw_mutex.unlock();
+        fs_mutex.unlock();
         for (int i = 0; i < size; ++i) {
             job->clusters[i] = first_cluster + i;
         }
@@ -273,14 +289,16 @@ void FileSystemDefragmenter::print_stats() {
     std::cout << " SCORE     : " << total_score << std::endl;
 }
 
-void FileSystemDefragmenter::move_cluster(int32_t from, int32_t to) {
-    rw_mutex.lock();
-    fseek(fs, cluster_to_addr(from), SEEK_SET);
-    fread(buffer_cluster, br->cluster_size, 1, fs);
-    fseek(fs, cluster_to_addr(to), SEEK_SET);
-    fwrite(buffer_cluster, br->cluster_size, 1, fs);
-    rw_mutex.unlock();
-};
+void FileSystemDefragmenter::move_cluster(char *buffer_cluster, int32_t from, int32_t to) {
+    fr_mutex.lock();
+    fseek(fr, cluster_to_addr(from), SEEK_SET);
+    fread(buffer_cluster, br->cluster_size, 1, fr);
+    fr_mutex.unlock();
+    fw_mutex.lock();
+    fseek(fw, cluster_to_addr(to), SEEK_SET);
+    fwrite(buffer_cluster, br->cluster_size, 1, fw);
+    fw_mutex.unlock();
+}
 
 
 
