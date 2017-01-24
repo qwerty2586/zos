@@ -13,7 +13,8 @@ const char *FileSystem::CODES_STR[] = {
         "DIR FULL",
         "NOT MOUNTED",
         "FILE NAME COLISSION",
-        "DIR NAME COLISSION"
+        "DIR NAME COLISSION",
+        "FILE NOT FOUND"
 };
 
 FileSystem::FileSystem() {
@@ -193,6 +194,9 @@ int FileSystem::put_file(const std::string &file, const std::string &path) {
     auto first = first_unused(dir_cluster + 1);
     FILE *input_file = fopen(file.c_str(), "rb");
 
+    if (input_file==NULL) {
+        return EXIT_FILE_NOT_FOUND;
+    }
     // zjistime velikost
     fseek(input_file, 0, SEEK_END);
     int32_t size = (int32_t) ftell(input_file);

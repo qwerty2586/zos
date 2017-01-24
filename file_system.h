@@ -16,6 +16,7 @@ public:
     static const int EXIT_NOT_MOUTED = 5;
     static const int EXIT_FILE_NAME_COLISSION = 6;
     static const int EXIT_DIR_NAME_COLISSION = 7;
+    static const int EXIT_FILE_NOT_FOUND = 8;
 
     static const char *CODES_STR[];
     //iniciace pod tridou
