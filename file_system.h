@@ -13,9 +13,9 @@ public:
     static const int EXIT_PATH_NOT_EMPTY = 2;
     static const int EXIT_EMPTY = 3;
     static const int EXIT_DIR_FULL = 4;
-    static const int EXIT_NOT_MOUTED = 5;
-    static const int EXIT_FILE_NAME_COLISSION = 6;
-    static const int EXIT_DIR_NAME_COLISSION = 7;
+    static const int EXIT_NOT_MOUNTED = 5;
+    static const int EXIT_FILE_NAME_COLLISION = 6;
+    static const int EXIT_DIR_NAME_COLLISION = 7;
     static const int EXIT_FILE_NOT_FOUND = 8;
 
     static const char *CODES_STR[];

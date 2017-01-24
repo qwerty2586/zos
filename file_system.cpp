@@ -1,4 +1,3 @@
-
 #include <cstdio>
 #include <sstream>
 #include "file_system.h"
@@ -12,8 +11,8 @@ const char *FileSystem::CODES_STR[] = {
         "EMPTY",
         "DIR FULL",
         "NOT MOUNTED",
-        "FILE NAME COLISSION",
-        "DIR NAME COLISSION",
+        "FILE NAME COLLISION",
+        "DIR NAME COLLISION",
         "FILE NOT FOUND"
 };
 
@@ -45,13 +44,13 @@ int FileSystem::mount(const std::string &fat_file) {
 
 int FileSystem::umount() {
     if (!mounted)
-        return EXIT_NOT_MOUTED;
+        return EXIT_NOT_MOUNTED;
     sync();
     fclose(fs);
 
     fs = NULL;
     delete br;
-    free(fat);
+    delete fat;
     delete buffer_cluster;
     delete zero_cluster;
     return EXIT_OK;
@@ -189,7 +188,7 @@ int FileSystem::put_file(const std::string &file, const std::string &path) {
     auto dir = get_dir(dir_cluster);
     if (dir->size() >= max_files_in_dir) return EXIT_DIR_FULL;
     for (auto &item : *dir) {
-        if (split(path, '/').back().compare(item.name) == 0) return EXIT_FILE_NAME_COLISSION;
+        if (split(path, '/').back().compare(item.name) == 0) return EXIT_FILE_NAME_COLLISION;
     }
     auto first = first_unused(dir_cluster + 1);
     FILE *input_file = fopen(file.c_str(), "rb");
@@ -333,7 +332,7 @@ int FileSystem::mk_dir(const std::string &dir_name, const std::string &path) {
         return EXIT_PATH_NOT_FOUND;
     auto dir = get_dir(dir_cluster);
     for (auto &item : *dir) {
-        if (dir_name.compare(item.name) == 0) return EXIT_DIR_NAME_COLISSION;
+        if (dir_name.compare(item.name) == 0) return EXIT_DIR_NAME_COLLISION;
     }
     if (dir->size() >= max_files_in_dir) return EXIT_DIR_FULL;
     int32_t new_cluster = first_unused(dir_cluster + 1);
