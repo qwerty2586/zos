@@ -11,7 +11,9 @@ const char *FileSystem::CODES_STR[] = {
         "PATH NOT EMPTY",
         "EMPTY",
         "DIR FULL",
-        "NOT MOUNTED"
+        "NOT MOUNTED",
+        "FILE NAME COLISSION",
+        "DIR NAME COLISSION"
 };
 
 FileSystem::FileSystem() {
@@ -185,6 +187,9 @@ int FileSystem::put_file(const std::string &file, const std::string &path) {
     auto dir_cluster = cd(path);
     auto dir = get_dir(dir_cluster);
     if (dir->size() >= max_files_in_dir) return EXIT_DIR_FULL;
+    for (auto &item : *dir) {
+        if (split(path, '/').back().compare(item.name) == 0) return EXIT_FILE_NAME_COLISSION;
+    }
     auto first = first_unused(dir_cluster + 1);
     FILE *input_file = fopen(file.c_str(), "rb");
 
@@ -323,6 +328,9 @@ int FileSystem::mk_dir(const std::string &dir_name, const std::string &path) {
     if (dir_cluster == -1)
         return EXIT_PATH_NOT_FOUND;
     auto dir = get_dir(dir_cluster);
+    for (auto &item : *dir) {
+        if (dir_name.compare(item.name) == 0) return EXIT_DIR_NAME_COLISSION;
+    }
     if (dir->size() >= max_files_in_dir) return EXIT_DIR_FULL;
     int32_t new_cluster = first_unused(dir_cluster + 1);
     directory *dir_item = new directory;
