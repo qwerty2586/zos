@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <unistd.h>
+#include <sstream>
 #include "file_system_defragmenter.h"
 
 int FileSystemDefragmenter::mount(const std::string &fat_file) {
@@ -44,7 +45,7 @@ int FileSystemDefragmenter::defragment(int threads_count) {
         }));
     }
 
-    // pockame nez workeri najedou
+    // pockame nez workeri najedou, zaroven zablokovanim vlakna se scheduler presmeruje na workery
     usleep(10000);
 
     auto start_time = std::chrono::high_resolution_clock::now();
@@ -70,7 +71,7 @@ int FileSystemDefragmenter::defragment(int threads_count) {
 
 
         paused_threads = 0;
-        workers_cv.notify_all(); // start_threads
+        workers_cv.notify_all(); // spustime vsechny pracovni thready
 
         while (paused_threads < threads_count) {
             main_thread_cv.wait(lock);
@@ -298,6 +299,26 @@ void FileSystemDefragmenter::move_cluster(char *buffer_cluster, int32_t from, in
     fseek(fw, cluster_to_addr(to), SEEK_SET);
     fwrite(buffer_cluster, br->cluster_size, 1, fw);
     fw_mutex.unlock();
+}
+
+void FileSystemDefragmenter::print_blocks() {
+
+    for (int i = 0; i < br->usable_cluster_count; ++i) {
+
+        switch (fat[i]) {
+            case    FAT_UNUSED      : std::cout << "-";
+                break;
+            case    FAT_DIRECTORY   : std::cout << "X";
+                break;
+            case    FAT_BAD_CLUSTER : std::cout << "E";
+                break;
+            default:
+                     std::cout << "0";
+            }
+        if (i%100 == 0) std::cout << std::endl;
+    }
+    std::cout << std::endl;
+
 }
 
 

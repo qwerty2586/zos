@@ -14,6 +14,8 @@ public:
 
     int defragment(int threads_count);
 
+    void print_blocks();
+
 protected:
 
     FILE *fw,*fr; // pouze na kopirovani clusteru
