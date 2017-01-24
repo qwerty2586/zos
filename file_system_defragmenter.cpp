@@ -209,20 +209,20 @@ void FileSystemDefragmenter::populate_jobs_and_back_table(int32_t cluster, int32
 
 /// zabere chunk tak aby si ho pro presun nemohlo zabrat jine vlakno
 int32_t FileSystemDefragmenter::reserve_chunk(int32_t size) {
-    int32_t r = last_reserver; // default 0 meli bychm resetovat mezi fazemi
+    int32_t r = 0; // default 0 meli bychm resetovat mezi fazemi
     fat_mutex.lock();
     reservation_mutex.lock();
-    for (int64_t i = last_reserver; i < last_reserver + br->usable_cluster_count - 1; ++i) {
-        if (fat[i % br->usable_cluster_count] == FAT_UNUSED &&
-            reservation_table[i % br->usable_cluster_count] == false) {
+    for (int64_t i = 0; i <  br->usable_cluster_count - 1; ++i) {
+        if (fat[i] == FAT_UNUSED &&
+            reservation_table[i] == false) {
             if (r < 0) {
-                r = (int32_t) (i % br->usable_cluster_count);
+                r = (int32_t) (i);
             } else {
-                if ((i % br->usable_cluster_count) - r >= size) {
+                if (i - r >= size) {
                     for (int32_t j = r; j < r + size; ++j) {
-                        reservation_table[j] = true;
+                        reservation_table[j] = true; ///zarezervujeme v tabulce ze nam tam nema nikdo psat
                     }
-                    last_reserver = r + size;
+
                     reservation_mutex.unlock();
                     fat_mutex.unlock();
                     return r;
@@ -269,6 +269,8 @@ void FileSystemDefragmenter::analyze_and_sort_jobs() {
         }
         total_score += joblist[i]->score;
     }
+
+    // rozrazeni do novych seznamu
     Job *job = to_next_round.pop();
     while (job != NULL) {
         if (job->score == 0) {
@@ -281,7 +283,7 @@ void FileSystemDefragmenter::analyze_and_sort_jobs() {
     total_files = prepared.get_vector().size();
     fat_mutex.unlock();
 }
-
+/// ke kazde fazi
 void FileSystemDefragmenter::print_stats() {
     std::cout << "============================" << std::endl;
     std::cout << " PHASE     : " << phase << std::endl;
@@ -289,7 +291,7 @@ void FileSystemDefragmenter::print_stats() {
     std::cout << " FRAGMENTS : " << total_fragments << std::endl;
     std::cout << " SCORE     : " << total_score << std::endl;
 }
-
+/// presun clusteru s pouzitim vlastnich file decriptoru
 void FileSystemDefragmenter::move_cluster(char *buffer_cluster, int32_t from, int32_t to) {
     fr_mutex.lock();
     fseek(fr, cluster_to_addr(from), SEEK_SET);
