@@ -1,0 +1,51 @@
+#!/bin/bash
+./zos fatka.fat -x 100000 8192
+
+for u in 0 1 2 3 4 5 6 7 8
+do
+
+./zos fatka.fat -m ${u} /
+
+for i in 2 3 4 5 6 7 8 9
+do
+./zos fatka.fat -m ${u}_${i} ${u}/
+
+./zos fatka.fat -a files/sprmario.nes /${u}/${u}_${i}/sprmario.nes
+./zos fatka.fat -a files/sprmario.nes /${u}/${u}_${i}/sprmari2.nes
+
+./zos fatka.fat -a files/sprmario.nes /${u}/${u}_${i}/sprmari3.nes
+./zos fatka.fat -f /${u}/${u}_${i}/sprmari2.nes
+./zos fatka.fat -a files/zos_cv9.pdf /${u}/${u}_${i}/zos.pdf
+./zos fatka.fat -a files/zos_cv9.pdf /${u}/${u}_${i}/zos2.pdf
+
+./zos fatka.fat -f /${u}/${u}_${i}/zos.pdf
+./zos fatka.fat -a files/zmk.h /${u}/${u}_${i}/zmk.h
+./zos fatka.fat -a files/zmk.h /${u}/${u}_${i}/zmk2.h
+./zos fatka.fat -a files/zmk.h /${u}/${u}_${i}/zmk3.h
+./zos fatka.fat -a files/zos_cv9.pdf /${u}/${u}_${i}/zoscv.pdf
+./zos fatka.fat -a files/zmk.h /${u}/${u}_${i}/zmk4.h
+./zos fatka.fat -a files/zmk.h /${u}/${u}_${i}/zmk5.h
+./zos fatka.fat -a files/zmk.h /${u}/${u}_${i}/zmk6.h
+./zos fatka.fat -f /${u}/${u}_${i}/zmk5.h
+
+./zos fatka.fat -a files/sprmario.nes /${u}/${u}_${i}/sprmari4.nes
+./zos fatka.fat -a files/sprmario.nes /${u}/${u}_${i}/sprmari5.nes
+./zos fatka.fat -a files/sprmario.nes /${u}/${u}_${i}/sprmari6.nes
+./zos fatka.fat -a files/sprmario.nes /${u}/${u}_${i}/sprmari7.nes
+./zos fatka.fat -a files/sprmario.nes /${u}/${u}_${i}/sprmari8.nes
+./zos fatka.fat -a files/sprmario.nes /${u}/${u}_${i}/sprmari9.nes
+./zos fatka.fat -a files/sprmario.nes /${u}/${u}_${i}/sprmari10.nes
+./zos fatka.fat -f /${u}/${u}_${i}/sprmari4.nes
+./zos fatka.fat -f /${u}/${u}_${i}/sprmari5.nes
+./zos fatka.fat -f /${u}/${u}_${i}/sprmari7.nes
+./zos fatka.fat -f /${u}/${u}_${i}/sprmari9.nes
+./zos fatka.fat -a files/zos_cv9.pdf /${u}/${u}_${i}/zos_m.pdf
+
+done
+
+done
+
+./zos fatka.fat -a files/mini.iso /mini1.iso
+./zos fatka.fat -a files/mini.iso /mini2.iso
+./zos fatka.fat -a files/mini.iso /mini3.iso
+
